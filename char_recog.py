@@ -3,8 +3,10 @@ import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 import matplotlib.pylab as plb
+import pandas as pd
 import struct
-from sklearn import decomposition
+#from sklearn import decomposition
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 import sys
 
@@ -77,14 +79,14 @@ def read_dataset(images_name,labels_name):
 def preprocess(image1D):
     image1DNew = np.empty(shape = [0,784])
     image1DNew.astype(float)
-    for j in range(5):
+    for j in range(10):
         result = []
         for i in range(784):
             result.append(float(image1D[j][i])/255.0)
         image1DNew = np.append(image1DNew, [np.array(result)], axis = 0)
     return image1DNew
 
-def PCA(image1D):
+def PCAnalysis(image1D):
     #784 original image dimension
     """
     image = image1D.reshape(28,28)
@@ -99,13 +101,21 @@ def PCA(image1D):
     while (newD<11):
         newD = newD + 1
     """
+    """
     #sys.setrecursionlimit(10000)
-    pca = decomposition.PCA(n_components=6, svd_solver='randomized',whiten=True)
+    #pca = decomposition.PCA(n_components=6, svd_solver='randomized',whiten=True)
     pca.fit(image1D)
     imageReduced = pca.transform(image1D)
-    print(np.shape(imageReduced))
-    return imageReduced
-        #ratio = sum(pca.explained_variance_) / sum(w)
+    """
+    pca = PCA(200, svd_solver='full')
+    principalComponents = pca.fit_transform(image1D)
+    B = pca.transform(image1D)
+    print("NUMBER OF COMPONENTS RETAINED")
+    print(pca.n_components_)
+    print("VARIANCE RATIO: " + str(sum(pca.explained_variance_)))
+    print(pca.explained_variance_)
+    PCImages = pd.DataFrame(data = principalComponents)
+    print(PCImages.head(10))
 
 #testset = read_dataset("test_images","test_labels") #an array of 70000 labels (0~9)
 trainingset = read_dataset("train_images","train_labels") #a 70000x784 numpy array which contains all examples with each
@@ -115,25 +125,24 @@ fig = plt.figure(figsize=(10,20))
 
 np.set_printoptions(threshold='nan')
 image1D = np.empty(shape = [0,784])
-print(image1D)
 
-for i in range(5):
+for i in range(10):
     sp = fig.add_subplot(10,5,i+1)
     sp.set_title(dataset[i][1])
     plt.axis('off')
     image1D = np.append(image1D,[np.array(dataset[i][0])],axis = 0)#.reshape(28,28)#first 50 images
 
-print("IMAGE IN 1D  BEFORE PREPROCESSING")
-print(image1D.shape)
-print(image1D)
+#print("IMAGE IN 1D  BEFORE PREPROCESSING")
+#print(image1D.shape)
+#print(image1D)
 
 image1DNew = preprocess(image1D)
-print("IMAGE AFTER PREPROCESSING")
-print(image1DNew.shape)
-print(image1DNew)
-imageReduced = PCA(image1DNew)
-print("IMAGE AFTER PCA TRANSFORMATION")
-print(imageReduced)
+#print("IMAGE AFTER PREPROCESSING")
+#print(image1DNew)
+
+imageReduced = PCAnalysis(image1DNew)
+#print("IMAGE AFTER PCA TRANSFORMATION")
+#print(imageReduced)
     #image = image1D.reshape(28,28)#first 50 images
     #print(image)
     #plt.imshow(image,interpolation='none',cmap=plb.gray(),label=dataset[i][1])
