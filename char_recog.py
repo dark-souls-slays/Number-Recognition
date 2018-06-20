@@ -8,6 +8,7 @@ import struct
 #from sklearn import decomposition
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 import sys
 
 """
@@ -16,8 +17,6 @@ The images were centered in a 28x28 image by computing the center of mass of the
 to position this point at the center of the 28x28 field.
 
 """
-
-
 def read_images(images_name):
 #returns an array of flattened images
     f = open(images_name, "rb")
@@ -79,71 +78,61 @@ def read_dataset(images_name,labels_name):
 def preprocess(image1D):
     image1DNew = np.empty(shape = [0,784])
     image1DNew.astype(float)
-    for j in range(10):
+    for j in range(10000):
         result = []
         for i in range(784):
             result.append(float(image1D[j][i])/255.0)
         image1DNew = np.append(image1DNew, [np.array(result)], axis = 0)
     return image1DNew
 
-def PCAnalysis(image1D):
+def PCAnalysis(image1D, test1D):
     #784 original image dimension
-    """
-    image = image1D.reshape(28,28)
-    Rx = np.corrcoef(image)
-    print(np.shape(Rx))
-    print(Rx)
-    w, v = LA.eig(np.diag((Rx)))
-    print("Eigenvalues Rx")
-    print(w)
-
-    #Find proper dimensionality
-    while (newD<11):
-        newD = newD + 1
-    """
-    """
-    #sys.setrecursionlimit(10000)
-    #pca = decomposition.PCA(n_components=6, svd_solver='randomized',whiten=True)
-    pca.fit(image1D)
-    imageReduced = pca.transform(image1D)
-    """
-    pca = PCA(200, svd_solver='full')
+    pca = PCA(100, svd_solver='full')
     principalComponents = pca.fit_transform(image1D)
-    B = pca.transform(image1D)
-    print("NUMBER OF COMPONENTS RETAINED")
-    print(pca.n_components_)
+    principalComponentsTest = pca.transform(test1D)
+    #print("NUMBER OF COMPONENTS RETAINED")
+    #print(pca.n_components_)
     print("VARIANCE RATIO: " + str(sum(pca.explained_variance_)))
     print(pca.explained_variance_)
     PCImages = pd.DataFrame(data = principalComponents)
-    print(PCImages.head(10))
+    #print(PCImages.head(10))
+    return (principalComponents, principalComponentsTest)
 
-#testset = read_dataset("test_images","test_labels") #an array of 70000 labels (0~9)
+def Learn(image, target, test, answer):
+    knn = KNeighborsClassifier(n_neighbors=3)
+    knn.fit(image, target)
+    counter = 0
+    for i in range(10000):
+        if(knn.predict([test[i]]) == answer[i]):
+            counter = counter + 1
+        else:
+            print(knn.predict_proba([test[i]]))
+            print(knn.predict([test[i]]))
+            print(answer[i])
+    print(float(counter)/1000.0)
+    return 1
+
+testset = read_dataset("test_images","test_labels") #an array of 70000 labels (0~9)
 trainingset = read_dataset("train_images","train_labels") #a 70000x784 numpy array which contains all examples with each
 dataset = trainingset
+dataset2 = testset
 
 fig = plt.figure(figsize=(10,20))
 
 np.set_printoptions(threshold='nan')
 image1D = np.empty(shape = [0,784])
+target = np.empty(shape = [0])
+image1DTest = np.empty(shape = [0,784])
+targetTest = np.empty(shape = [0])
 
-for i in range(10):
-    sp = fig.add_subplot(10,5,i+1)
-    sp.set_title(dataset[i][1])
-    plt.axis('off')
+for i in range(10000):
     image1D = np.append(image1D,[np.array(dataset[i][0])],axis = 0)#.reshape(28,28)#first 50 images
-
-#print("IMAGE IN 1D  BEFORE PREPROCESSING")
-#print(image1D.shape)
-#print(image1D)
+    target = np.append(target,[int(dataset[i][1])],axis = 0)
+    image1DTest = np.append(image1DTest,[np.array(dataset2[i][0])],axis = 0)#.reshape(28,28)#first 50 images
+    targetTest = np.append(targetTest,[int(dataset2[i][1])],axis = 0)
 
 image1DNew = preprocess(image1D)
-#print("IMAGE AFTER PREPROCESSING")
-#print(image1DNew)
-
-imageReduced = PCAnalysis(image1DNew)
-#print("IMAGE AFTER PCA TRANSFORMATION")
-#print(imageReduced)
-    #image = image1D.reshape(28,28)#first 50 images
-    #print(image)
-    #plt.imshow(image,interpolation='none',cmap=plb.gray(),label=dataset[i][1])
-#plt.show()
+image1DNewTest = preprocess(image1DTest)
+imageReduced, imageReducedTest = PCAnalysis(image1DNew, image1DNewTest)
+Learn(imageReduced, target, imageReducedTest,targetTest)
+#Accuracy(imageReducedTest, targetTest)
