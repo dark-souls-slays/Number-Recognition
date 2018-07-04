@@ -76,8 +76,8 @@ def LearnKNN(train, ytrain, test, ytest):
     print("done")
 ```
 ## Conclusion
-It is very important to standarize the data before further processing. Look for a suitable number of principal components to retain when doing PCA, by comparing how much variance each PC retains. If the variance value after a certain component is not significant we do not need to keep adding more components. If the data is prepocessed properly, the difference in accuracy between model doesnt vary much.<br>
-###### KNN-> time: 11:55:30 accuracy: 0.9506<br>KERAS Model-> time: 11:55:30 accuracy: 0.97
+It is very important to standarize the data before further processing. Look for a suitable number of principal components to retain when doing PCA, by comparing how much variance each PC retains. If the variance value after a certain component is not significant we do not need to keep adding more components. If the data is prepocessed properly, the difference in accuracy between model doesnt vary much.<br> Keras model takes a bit longer, but its accuracy is better.
+###### KNN-> time: 11:55:30 accuracy: 0.9506<br>KERAS Model-> time: 13:18.25 accuracy: 0.97
 
 ##### Comments
 * Unable to download data because the page was down. Had to download datasets and extract pixel values with function.

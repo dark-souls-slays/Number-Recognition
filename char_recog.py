@@ -167,4 +167,3 @@ trainingset, testset, pca_std = PCAnalysis(trainingset, testset)
 
 #LearnKNN(trainingset, ytrain, testset, ytest)
 LearnKeras(trainingset, ytrain, testset, ytest, pca_std)
-#Accuracy(imageReducedTest, targetTest)
