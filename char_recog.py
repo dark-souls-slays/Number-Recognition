@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.pylab as plb
 import pandas as pd
 import struct
+from PIL import Image
 #from sklearn import decomposition
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -73,30 +74,39 @@ def read_dataset(images_name,labels_name):
     images = read_images(images_name)
     labels = read_labels(labels_name)
     assert len(images) == len(labels)
-    return zip(images,labels)
+    return images,labels
 
-def preprocess(image1D):
-    image1DNew = np.empty(shape = [0,784])
-    image1DNew.astype(float)
-    for j in range(10000):
+def preprocess(data, samples):
+    for j in range(samples):
         result = []
         for i in range(784):
-            result.append(float(image1D[j][i])/255.0)
-        image1DNew = np.append(image1DNew, [np.array(result)], axis = 0)
-    return image1DNew
+            result.append(float(data[j][i])/255.0)
+        data[j] = np.array(result)
+    print("preprocess successful")
+    return data
 
-def PCAnalysis(image1D, test1D):
+def PCAnalysis(train, test):
     #784 original image dimension
-    pca = PCA(100, svd_solver='full')
-    principalComponents = pca.fit_transform(image1D)
-    principalComponentsTest = pca.transform(test1D)
+    """
+    pca = PCA(n_components=500)
+    pca.fit(train)
+
+    #Show variance to choose an adecuate number of components to keep
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('Number of components')
+    plt.ylabel('Cumulative explained variance')
+    """
+    pca = PCA(100, svd_solver='auto')
+    train = pca.fit_transform(train)
+    test = pca.transform(test)
     #print("NUMBER OF COMPONENTS RETAINED")
     #print(pca.n_components_)
     print("VARIANCE RATIO: " + str(sum(pca.explained_variance_)))
     print(pca.explained_variance_)
-    PCImages = pd.DataFrame(data = principalComponents)
-    #print(PCImages.head(10))
-    return (principalComponents, principalComponentsTest)
+
+    print("PCA successful")
+    
+    return (train, test)
 
 def Learn(image, target, test, answer):
     knn = KNeighborsClassifier(n_neighbors=3)
@@ -109,30 +119,29 @@ def Learn(image, target, test, answer):
             print(knn.predict_proba([test[i]]))
             print(knn.predict([test[i]]))
             print(answer[i])
-    print(float(counter)/1000.0)
+    print(float(counter)/10000.0)
     return 1
 
-testset = read_dataset("test_images","test_labels") #an array of 70000 labels (0~9)
-trainingset = read_dataset("train_images","train_labels") #a 70000x784 numpy array which contains all examples with each
-dataset = trainingset
-dataset2 = testset
+testset, ytest = read_dataset("test_images","test_labels") #an array of 70000 labels (0~9)
+trainingset, ytrain = read_dataset("train_images","train_labels") #a 70000x784 numpy array which contains all examples with each
 
+
+trainingset = np.asarray(trainingset)
+testset = np.asarray(testset)
+
+"""
 fig = plt.figure(figsize=(10,20))
-
-np.set_printoptions(threshold='nan')
-image1D = np.empty(shape = [0,784])
-target = np.empty(shape = [0])
-image1DTest = np.empty(shape = [0,784])
-targetTest = np.empty(shape = [0])
-
-for i in range(10000):
-    image1D = np.append(image1D,[np.array(dataset[i][0])],axis = 0)#.reshape(28,28)#first 50 images
-    target = np.append(target,[int(dataset[i][1])],axis = 0)
-    image1DTest = np.append(image1DTest,[np.array(dataset2[i][0])],axis = 0)#.reshape(28,28)#first 50 images
-    targetTest = np.append(targetTest,[int(dataset2[i][1])],axis = 0)
-
-image1DNew = preprocess(image1D)
-image1DNewTest = preprocess(image1DTest)
-imageReduced, imageReducedTest = PCAnalysis(image1DNew, image1DNewTest)
+sp = fig.add_subplot(10,5,1)
+sp.set_title(8)
+plt.axis('off')
+image = np.array(trainingset[59999]).reshape(28,28)
+plt.imshow(image,interpolation='none',cmap=plb.gray(),label=8)
+plt.show()
+"""
+trainingset= preprocess(trainingset, 60000)
+testset = preprocess(testset, 10000)
+trainingset, testset = PCAnalysis(trainingset, testset)
+"""
 Learn(imageReduced, target, imageReducedTest,targetTest)
 #Accuracy(imageReducedTest, targetTest)
+"""
