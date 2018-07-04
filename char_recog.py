@@ -1,4 +1,3 @@
-from sklearn.datasets import fetch_mldata
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
@@ -7,10 +6,12 @@ import pandas as pd
 import struct
 from PIL import Image
 #from sklearn import decomposition
+from sklearn.datasets import fetch_mldata
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 import sys
 
 from keras.models import Sequential
@@ -84,16 +85,6 @@ def read_dataset(images_name,labels_name):
     assert len(images) == len(labels)
     return images,labels
 
-def preprocess(data, samples):
-    for j in range(samples):
-        print("preprocessing sample ->" + str(j) + "out of " + str(samples))
-        result = []
-        for i in range(784):
-            result.append(float(data[j][i])/255.0)
-        data[j] = np.array(result)
-    print("preprocess successful")
-    return data
-
 def PCAnalysis(train, test):
     pca = PCA(300, svd_solver='full')
     train = pca.fit_transform(train)
@@ -107,9 +98,6 @@ def PCAnalysis(train, test):
     plt.ylabel('Cumulative explained variance')
     print("VARIANCE RATIO: " + str(pca.explained_variance_ratio_.cumsum()))
     plt.show()
-    """
-
-    """
     #print("NUMBER OF COMPONENTS RETAINED")
     #print(pca.n_components_)
     print("VARIANCE RATIO: " + str(sum(pca.explained_variance_)))
@@ -119,27 +107,17 @@ def PCAnalysis(train, test):
 
     return (train, test, pca_std)
 
-def Learn(train, ytrain, test, ytest):
+def LearnKNN(train, ytrain, test, ytest):
     #.35 accuracy with 3 neighbors
     #.32 accuracy with 4 neighbors
+    print("KNN Classifier")
     knn = KNeighborsClassifier(n_neighbors=3)
     knn.fit(train, ytrain)
     predicted = knn.predict(test)
     acc = accuracy_score(ytest, predicted)
     print(acc)
-    """
-    counter = 0
-    for i in range(10000):
-        if(knn.predict([test[i]]) == ytest[i]):
-            counter = counter + 1
-        else:
-            print(knn.predict_proba([test[i]]))
-            print(knn.predict([test[i]]))
-            print(ytest[i])
-    print(float(counter)/10000.0)
-    print(knn.score(test,ytest))
-    return 1
-    """
+    print("done")
+
 
 def LearnKeras(train, ytrain, testset, ytest, pca_std):
     model = Sequential()
@@ -180,8 +158,6 @@ image = np.array(trainingset[59999]).reshape(28,28)
 plt.imshow(image,interpolation='none',cmap=plb.gray(),label=8)
 plt.show()
 """
-#trainingset= preprocess(trainingset, 60000)
-#testset = preprocess(testset, 10000)
 
 scaler = StandardScaler()
 scaler.fit(trainingset)
@@ -189,6 +165,6 @@ trainingset = scaler.transform(trainingset)
 testset = scaler.transform(testset)
 trainingset, testset, pca_std = PCAnalysis(trainingset, testset)
 
-#Learn(trainingset, ytrain, testset, ytest)
+#LearnKNN(trainingset, ytrain, testset, ytest)
 LearnKeras(trainingset, ytrain, testset, ytest, pca_std)
 #Accuracy(imageReducedTest, targetTest)
